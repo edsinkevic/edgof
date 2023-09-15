@@ -1,4 +1,4 @@
-#define N 10
+#define GOF_N 20
 #define ALIVE 1
 #define DEAD 0
 
