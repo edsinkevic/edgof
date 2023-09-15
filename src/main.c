@@ -1,106 +1,156 @@
 
-#include<stdio.h>
-#include<assert.h>
+#include <stdio.h>
+#include <assert.h>
+#include <time.h>
+#include <SDL2/SDL.h>
+#include "gof.h"
 
-#define N 10
 
-#define ALIVE 1
-#define DEAD 0
+#define GRID_CELL_SIZE 50
+#define GRID_WIDTH 10
+#define GRID_HEIGHT 10
 
-char board[N * N] = {DEAD};
+#define WINDOW_WIDTH (GRID_WIDTH * GRID_CELL_SIZE) + 1
+#define WINDOW_HEIGHT (GRID_HEIGHT * GRID_CELL_SIZE) + 1
 
-int id(int row, int col) {
-  return row * N + col;
-}
 
-char cell_at(int row, int col) {
-  return board[id(row, col)];
-}
+int main(int argc, char *argv[]) {
+  gof_bear(5, 5);
+  gof_bear(5, 4);
+  gof_bear(5, 6);
+  gof_bear(4, 5);
 
-void kill(int row, int col) {
-  board[id(row, col)] = DEAD;
-}
+  gof_bear(6, 7);
 
-void bear(int row, int col) {
-  board[id(row, col)] = ALIVE;
-}
+  gof_bear(8, 7);
 
-void print_board() {
-  for (int col = 0; col < N; col++) {
-    for (int row = 0; row < N; row++) {
-      printf("%d  ", board[id(row, col)]);
-    }
-    printf("\n");
+  gof_bear(2, 3);
+  gof_bear(3, 2);
+  gof_bear(5, 6);
+  gof_bear(4, 5);
+
+  SDL_Window *window = NULL;
+  SDL_Renderer *renderer = NULL;
+  SDL_Surface *window_surface = NULL;
+  SDL_Surface *image_surface = NULL;
+
+
+  SDL_Color grid_background = {22, 22, 22, 255}; // Barely Black
+  SDL_Color grid_line_color = {44, 44, 44, 255}; // Dark grey
+  SDL_Color grid_cursor_ghost_color = {44, 44, 44, 255};
+  SDL_Color grid_cursor_color = {255, 255, 255, 255}; // White
+
+  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    fprintf(
+        stderr, 
+        "Could not initialize video: %s\n",
+        SDL_GetError());
+    goto main_error;
   }
-  printf("\n");
-}
 
-char in_bounds(int n) {
-  return n >= 0 && n < N;
-}
+  if (SDL_CreateWindowAndRenderer(
+      WINDOW_WIDTH,
+      WINDOW_HEIGHT,
+      0,
+      &window,
+      &renderer) < 0) {
+    fprintf(stderr,
+        "Could not create window and renderer: %s\n",
+        SDL_GetError());
+    goto main_error;
+  }
 
-char is_alive(int row, int col) {
-  return cell_at(row, col) == ALIVE;
-}
+  SDL_SetWindowTitle(window, "GAME OF LIFE");
 
-int count_neighbors(int row, int col) {
-  char neighbors = 0;
+  SDL_bool quit = SDL_FALSE;
 
-  for (int _row = row - 1; _row <= row + 1; _row++) {
-    for (int _col = col - 1; _col <= col + 1; _col++) {
-      if (
-          (_row != row || _col != col) && 
-          in_bounds(row) && in_bounds(col) && 
-          is_alive(_row, _col)
-          ) {
-        neighbors++;
+  while (!quit) {
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+      switch (event.type) {
+        case SDL_KEYDOWN:
+          if (event.key.keysym.sym == SDLK_q) {
+            quit = SDL_TRUE;
+          }
+          if (event.key.keysym.sym == SDLK_w) {
+            gof();
+          }
+          break;
       }
     }
-  }
 
+    SDL_SetRenderDrawColor(
+        renderer,
+        grid_background.r,
+        grid_background.g,
+        grid_background.b,
+        grid_background.a);
 
-  return neighbors;
-}
+    SDL_RenderClear(renderer);
+    
+    SDL_SetRenderDrawColor(
+        renderer,
+        grid_line_color.r,
+        grid_line_color.g,
+        grid_line_color.b,
+        grid_line_color.a);
 
-
-void gof() {
-  //1. Any live cell with fewer than two live neighbours dies, as if by underpopulation.
-  //2. Any live cell with two or three live neighbours lives on to the next generation.
-  //3. Any live cell with more than three live neighbours dies, as if by overpopulation.
-  //4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-
-  for (int col = 0; col < N; col++) {
-    for (int row = 0; row < N; row++) {
-      
-      int count = count_neighbors(row, col);
-      int alive = is_alive(row, col);
-      if (!alive && count == 3) {
-        printf("Birthing [%d, %d]\n", row, col);
-
-        bear(row, col);
-      }
-
-      if (alive && (count < 2 || count > 3)) {
-        printf("Killing [%d, %d]\n", row, col);
-        kill(row, col);
-      } 
+    for (
+        int x = 0;
+        x < 1 + GRID_WIDTH * GRID_CELL_SIZE;
+        x += GRID_CELL_SIZE) {
+      SDL_RenderDrawLine(renderer, x, 0, x, WINDOW_HEIGHT);
     }
+
+    for (
+        int y = 0;
+        y < 1 + GRID_HEIGHT * GRID_CELL_SIZE;
+        y += GRID_CELL_SIZE) {
+      SDL_RenderDrawLine(renderer, 0, y, WINDOW_WIDTH, y);
+    }
+
+    SDL_SetRenderDrawColor(
+        renderer,
+        grid_cursor_color.r,
+        grid_cursor_color.g,
+        grid_cursor_color.b,
+        grid_cursor_color.a);
+
+
+    for (int col = 0; col < N; col++) {
+      for (int row = 0; row < N; row++) {
+        if (gof_is_alive(row, col)) {
+          SDL_Rect grid_cursor = {
+            .x = col * GRID_CELL_SIZE, 
+            .y = row * GRID_CELL_SIZE,
+            .w = GRID_CELL_SIZE,
+            .h = GRID_CELL_SIZE
+          };
+          SDL_RenderFillRect(renderer, &grid_cursor);
+        }
+      }
+    }
+
+
+    SDL_RenderPresent(renderer);
   }
-}
 
-int main() {
-  bear(5, 4);
-  bear(5, 5);
-  bear(5, 6);
-  bear(4, 5);
-  bear(4, 4);
-  bear(4, 3);
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
 
-  for (int i = 0; i < 5; i++) {
-    print_board();
-    gof();
+  return EXIT_SUCCESS;
+
+
+main_error:
+  if (renderer) {
+    SDL_DestroyRenderer(renderer);
   }
 
-  return 0;
-}
+  if (window) {
+    SDL_DestroyWindow(window);
+  }
 
+  return EXIT_FAILURE;
+}
