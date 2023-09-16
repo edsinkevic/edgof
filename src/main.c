@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <assert.h>
 #include <time.h>
@@ -6,7 +5,7 @@
 #include "gof.h"
 
 
-#define GRID_CELL_SIZE 50
+#define GRID_CELL_SIZE 5
 #define GRID_WIDTH GOF_N
 #define GRID_HEIGHT GOF_N
 
@@ -73,9 +72,28 @@ main_error:
   return EXIT_FAILURE;
 }
 
+SDL_bool draw_click_hold = SDL_FALSE;
+SDL_bool delete_click_hold = SDL_FALSE;
+
+void handle_mouse_state(
+    SDL_bool draw_click_hold,
+    SDL_bool delete_click_hold,
+    Sint32 x,
+    Sint32 y) {
+
+  if (draw_click_hold) {
+    gof_bear(y / GRID_CELL_SIZE, x / GRID_CELL_SIZE);
+  } else if(delete_click_hold) {
+    gof_kill(y / GRID_CELL_SIZE, x / GRID_CELL_SIZE);
+  }
+
+}
+
 char gof_handle_input() {
   SDL_bool should_continue = SDL_TRUE;
   SDL_Event event;
+  SDL_MouseButtonEvent e;
+  SDL_MouseMotionEvent m;
   
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
@@ -90,11 +108,47 @@ char gof_handle_input() {
         break;
 
       case SDL_MOUSEBUTTONDOWN:
-        gof_bear(
-            event.motion.y / GRID_CELL_SIZE,
-            event.motion.x / GRID_CELL_SIZE
-            );
+        e = event.button;
+        if (e.button == SDL_BUTTON_LEFT) {
+          draw_click_hold = SDL_TRUE;
+        }
+
+        if (e.button == SDL_BUTTON_RIGHT) {
+          delete_click_hold = SDL_TRUE;
+        }
+
+        handle_mouse_state(
+            draw_click_hold,
+            delete_click_hold,
+            e.x,
+            e.y);
+
         break;
+
+      case SDL_MOUSEBUTTONUP:
+        e = event.button;
+
+        if (e.button == SDL_BUTTON_LEFT) {
+          draw_click_hold = SDL_FALSE;
+        }
+
+        if (e.button == SDL_BUTTON_RIGHT) {
+          delete_click_hold = SDL_FALSE;
+        }
+
+        break;
+
+      case SDL_MOUSEMOTION:
+        m = event.motion;
+
+        handle_mouse_state(
+            draw_click_hold,
+            delete_click_hold,
+            m.x,
+            m.y);
+
+        break;
+
     }
   }
 
@@ -132,7 +186,7 @@ void gof_render_lives(SDL_Renderer *renderer) {
     .h = GRID_CELL_SIZE
   };
 
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  SDL_SetRenderDrawColor(renderer, 186, 82, 211, 255);
 
   for (int col = 0; col < GOF_N; col++) {
     for (int row = 0; row < GOF_N; row++) {

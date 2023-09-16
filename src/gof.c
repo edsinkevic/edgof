@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 char board[GOF_N * GOF_N] = {DEAD};
+char double_board[GOF_N * GOF_N] = {DEAD};
 
 int id(int row, int col) {
   return row * GOF_N + col;
@@ -11,11 +12,21 @@ char cell_at(int row, int col) {
   return board[id(row, col)];
 }
 
+void gof_kill(int row, int col) {
+  board[id(row, col)] = DEAD;
+  double_board[id(row, col)] = DEAD;
+}
+
+void gof_bear(int row, int col) {
+  board[id(row, col)] = ALIVE;
+  double_board[id(row, col)] = ALIVE;
+}
+
 void kill(int row, int col) {
   board[id(row, col)] = DEAD;
 }
 
-void gof_bear(int row, int col) {
+void bear(int row, int col) {
   board[id(row, col)] = ALIVE;
 }
 
@@ -23,6 +34,16 @@ void print_board() {
   for (int col = 0; col < GOF_N; col++) {
     for (int row = 0; row < GOF_N; row++) {
       printf("%d  ", board[id(row, col)]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
+void print_double_board() {
+  for (int col = 0; col < GOF_N; col++) {
+    for (int row = 0; row < GOF_N; row++) {
+      printf("%d  ", double_board[id(row, col)]);
     }
     printf("\n");
   }
@@ -45,7 +66,7 @@ int count_neighbors(int row, int col) {
       if (
           (_row != row || _col != col) && 
           in_bounds(row) && in_bounds(col) && 
-          gof_is_alive(_row, _col)
+          double_board[id(_row, _col)] == ALIVE
           ) {
         neighbors++;
       }
@@ -62,14 +83,24 @@ void gof() {
     for (int row = 0; row < GOF_N; row++) {
       
       int count = count_neighbors(row, col);
-      int alive = gof_is_alive(row, col);
+      char alive = double_board[id(row, col)] == ALIVE;
+
+      if (alive && (count == 2 || count == 3)) {
+        continue;
+      } 
+
       if (!alive && count == 3) {
-        gof_bear(row, col);
+        bear(row, col);
+        continue;
       }
 
-      if (alive && (count < 2 || count > 3)) {
-        kill(row, col);
-      } 
+      kill(row, col);
+    }
+  }
+
+  for (int col = 0; col < GOF_N; col++) {
+    for (int row = 0; row < GOF_N; row++) {
+      double_board[id(row, col)] = board[id(row, col)];
     }
   }
 }
