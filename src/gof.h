@@ -1,4 +1,5 @@
-#define GOF_N 150
+#define GOF_WIDTH 500
+#define GOF_HEIGHT 500
 #define ALIVE 1
 #define DEAD 0
 

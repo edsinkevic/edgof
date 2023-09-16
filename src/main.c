@@ -5,9 +5,9 @@
 #include "gof.h"
 
 
-#define GRID_CELL_SIZE 5
-#define GRID_WIDTH GOF_N
-#define GRID_HEIGHT GOF_N
+#define GRID_CELL_SIZE 3
+#define GRID_WIDTH GOF_WIDTH
+#define GRID_HEIGHT GOF_HEIGHT
 
 #define WINDOW_WIDTH (GRID_WIDTH * GRID_CELL_SIZE) + 1
 #define WINDOW_HEIGHT (GRID_HEIGHT * GRID_CELL_SIZE) + 1
@@ -188,8 +188,8 @@ void gof_render_lives(SDL_Renderer *renderer) {
 
   SDL_SetRenderDrawColor(renderer, 186, 82, 211, 255);
 
-  for (int col = 0; col < GOF_N; col++) {
-    for (int row = 0; row < GOF_N; row++) {
+  for (int col = 0; col < GOF_WIDTH; col++) {
+    for (int row = 0; row < GOF_HEIGHT; row++) {
       if (gof_is_alive(row, col)) {
         grid_cursor.x = col * GRID_CELL_SIZE;
         grid_cursor.y = row * GRID_CELL_SIZE;
