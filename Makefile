@@ -1,5 +1,5 @@
 build_folder:
-	mkdir build
+	mkdir -p build
 
 main.o: build_folder
 	gcc -c src/main.c -o build/main.o -Wpedantic -std=c11
