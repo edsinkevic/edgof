@@ -8,4 +8,6 @@ gof.o: build_folder
 	gcc -c src/gof.c -o build/gof.o -Wpedantic -std=c11
 
 gof: main.o gof.o
-	gcc build/main.o build/gof.o -o gof -lSDL2main -lSDL2
+	gcc build/main.o build/gof.o -o gof -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+
+all: gof

@@ -1,5 +1,6 @@
-#define GOF_WIDTH 500
-#define GOF_HEIGHT 500
+#pragma once
+#define GOF_WIDTH 60
+#define GOF_HEIGHT 60
 #define ALIVE 1
 #define DEAD 0
 
